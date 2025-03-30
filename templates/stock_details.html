@@ -1,0 +1,25 @@
+<!-- For each stock in the loop -->
+<div class="card mb-4">
+  <div class="card-header d-flex justify-content-between align-items-center">
+    <h5>{{ stock.symbol }}</h5>
+    <div>
+      <span class="fw-bold">${{ stock.price|round(2) }}</span>
+      <button class="btn btn-success btn-sm ms-2">STRONG BUY</button>
+    </div>
+  </div>
+  <div class="card-body">
+    <h6>Price Chart</h6>
+    <div class="chart-container" style="position: relative; height:300px; width:100%">
+      <canvas id="chart-{{ stock.symbol }}" width="400" height="200"></canvas>
+      <div id="chart-loading-{{ stock.symbol }}" class="text-center py-5">
+        <div class="spinner-border text-primary" role="status">
+          <span class="visually-hidden">Loading...</span>
+        </div>
+        <p class="mt-2">Loading chart data...</p>
+      </div>
+      <div id="chart-error-{{ stock.symbol }}" class="alert alert-warning d-none">
+        Unable to load chart data. Please try again later.
+      </div>
+    </div>
+  </div>
+</div> 

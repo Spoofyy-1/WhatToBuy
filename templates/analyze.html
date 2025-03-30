@@ -1,0 +1,105 @@
+<!-- Update the top dashboard cards -->
+<div class="row">
+    <div class="col-md-3">
+        <div class="card dashboard-card">
+            <div class="card-body">
+                <h6 class="text-muted mb-1">Total Investment</h6>
+                <h3 class="mb-0">${{ portfolio.total_investment|default(0)|round(2) }}</h3>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card dashboard-card">
+            <div class="card-body">
+                <h6 class="text-muted mb-1">3-Day Return</h6>
+                <h3 class="mb-0">{% if portfolio.day3_return_pct|default(0) >= 0 %}+{% endif %}{{ portfolio.day3_return_pct|default(0)|round(2) }}%</h3>
+                <div class="mt-2">
+                    <span class="badge {% if portfolio.day3_profit_loss|default(0) >= 0 %}bg-success{% else %}bg-danger{% endif %}">
+                        {% if portfolio.day3_profit_loss|default(0) >= 0 %}+{% endif %}${{ portfolio.day3_profit_loss|default(0)|round(2) }}
+                    </span>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card dashboard-card">
+            <div class="card-body">
+                <h6 class="text-muted mb-1">5-Day Return</h6>
+                <h3 class="mb-0">{% if portfolio.day5_return_pct|default(0) >= 0 %}+{% endif %}{{ portfolio.day5_return_pct|default(0)|round(2) }}%</h3>
+                <div class="mt-2">
+                    <span class="badge {% if portfolio.day5_profit_loss|default(0) >= 0 %}bg-success{% else %}bg-danger{% endif %}">
+                        {% if portfolio.day5_profit_loss|default(0) >= 0 %}+{% endif %}${{ portfolio.day5_profit_loss|default(0)|round(2) }}
+                    </span>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card dashboard-card">
+            <div class="card-body">
+                <h6 class="text-muted mb-1">Total Missed Opportunity</h6>
+                <h3 id="missed-opportunity-value" class="mb-0">Calculating...</h3>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Update the analysis results table headers -->
+<thead class="table-light">
+    <tr>
+        <th>SYMBOL</th>
+        <th>RECOMMENDATION</th>
+        <th>PRICE</th>
+        <th>ALLOCATION</th>
+        <th>3-DAY RETURN</th>
+        <th>5-DAY RETURN</th>
+        <th>ENTRY QUALITY</th>
+        <th>ACTIONS</th>
+    </tr>
+</thead>
+
+<!-- Update the table rows -->
+<tr class="position-row" data-symbol="{{ result.symbol }}">
+    <td class="fw-bold">{{ result.symbol }}</td>
+    <td>
+        <span class="badge {% if 'BUY' in result.recommendation.recommendation %}badge-buy{% elif 'SELL' in result.recommendation.recommendation %}badge-sell{% elif 'HOLD' in result.recommendation.recommendation %}badge-hold{% else %}bg-secondary{% endif %}">
+            {{ result.recommendation.recommendation }}
+        </span>
+    </td>
+    <td class="price-cell">
+        ${{ result.technical.price|safe_round(2) }}<br>
+        <small>Purchase Price</small>
+    </td>
+    <td>${{ allocation[result.symbol]|default(0)|safe_round(2) }}</td>
+    <td class="{% if result.backtest.day3_return|default(0) >= 0 %}text-success{% else %}text-danger{% endif %}">
+        {% if result.backtest.day3_return is defined and result.backtest.day3_return is not none %}
+            {% if result.backtest.day3_return|float >= 0 %}+{% endif %}{{ result.backtest.day3_return|float|round(2) }}%<br>
+            <small>{{ result.backtest.day3_date }}</small>
+        {% else %}
+            N/A<br>
+            <small>No data</small>
+        {% endif %}
+    </td>
+    <td class="{% if result.backtest.day5_return|default(0) >= 0 %}text-success{% else %}text-danger{% endif %}">
+        {% if result.backtest.day5_return is defined and result.backtest.day5_return is not none %}
+            {% if result.backtest.day5_return|float >= 0 %}+{% endif %}{{ result.backtest.day5_return|float|round(2) }}%<br>
+            <small>{{ result.backtest.day5_date }}</small>
+        {% else %}
+            N/A<br>
+            <small>No data</small>
+        {% endif %}
+    </td>
+    <td>
+        <span class="badge {% if result.entry_quality %}bg-success{% else %}bg-secondary{% endif %}">
+            {{ "GOOD ENTRY" if result.entry_quality else "NEUTRAL" }}
+        </span>
+    </td>
+    <td>
+        <button class="btn btn-sm btn-outline-info details-toggle" data-target="details-{{ result.symbol }}">
+            <i class="bi bi-info-circle"></i>
+        </button>
+        <button class="btn btn-sm btn-outline-success verify-price" data-symbol="{{ result.symbol }}">
+            <i class="bi bi-check-circle"></i> Verify Price
+        </button>
+    </td>
+</tr> 

@@ -1,0 +1,268 @@
+{% extends 'layout.html' %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row mb-4">
+        <div class="col-md-12">
+            <div class="card shadow">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">Your Portfolio</h5>
+                    <a href="/analyze" class="btn btn-sm btn-outline-primary">
+                        <i class="bi bi-plus"></i> New Analysis
+                    </a>
+                </div>
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                        <table class="table table-hover mb-0">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>Symbol</th>
+                                    <th>Shares</th>
+                                    <th>Avg Price</th>
+                                    <th>Current</th>
+                                    <th>Market Value</th>
+                                    <th>P/L</th>
+                                    <th>% Change</th>
+                                    <th>Entry Date</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for position in portfolio %}
+                                <tr>
+                                    <td class="fw-bold">{{ position.symbol }}</td>
+                                    <td>{{ position.shares }}</td>
+                                    <td>${{ position.avg_price|safe_round(2) }}</td>
+                                    <td>${{ position.current_price|safe_round(2) }}</td>
+                                    <td>${{ (position.shares * position.current_price)|safe_round(2) }}</td>
+                                    <td class="{% if position.profit_loss >= 0 %}text-success{% else %}text-danger{% endif %}">
+                                        {% if position.profit_loss >= 0 %}+{% endif %}${{ position.profit_loss|safe_round(2) }}
+                                    </td>
+                                    <td>
+                                        <span class="badge {% if position.percent_change >= 0 %}bg-success{% else %}bg-danger{% endif %}">
+                                            {% if position.percent_change >= 0 %}+{% endif %}{{ position.percent_change|safe_round(2) }}%
+                                        </span>
+                                    </td>
+                                    <td>{{ position.entry_date }}</td>
+                                    <td>
+                                        <button class="btn btn-sm btn-danger sell-btn" data-symbol="{{ position.symbol }}" data-shares="{{ position.shares }}">
+                                            Sell
+                                        </button>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                                {% if portfolio|length == 0 %}
+                                <tr>
+                                    <td colspan="9" class="text-center p-3">No positions in portfolio. <a href="/analyze">Analyze stocks</a> to find new opportunities.</td>
+                                </tr>
+                                {% endif %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="row">
+        <div class="col-md-12 mb-4">
+            <div class="card shadow">
+                <div class="card-header">
+                    <h5 class="mb-0">Trade History</h5>
+                </div>
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                        <table class="table mb-0">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>Date</th>
+                                    <th>Symbol</th>
+                                    <th>Action</th>
+                                    <th>Shares</th>
+                                    <th>Price</th>
+                                    <th>Total</th>
+                                    <th>P/L</th>
+                                    <th>Missed Opportunity</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for trade in trades %}
+                                <tr>
+                                    <td>{{ trade.date }}</td>
+                                    <td class="fw-bold">{{ trade.symbol }}</td>
+                                    <td>
+                                        <span class="badge {% if trade.action == 'BUY' %}bg-success{% else %}bg-danger{% endif %}">
+                                            {{ trade.action }}
+                                        </span>
+                                    </td>
+                                    <td>{{ trade.shares }}</td>
+                                    <td>${{ trade.price|safe_round(2) }}</td>
+                                    <td>${{ (trade.shares * trade.price)|safe_round(2) }}</td>
+                                    <td class="{% if trade.profit_loss > 0 %}text-success{% elif trade.profit_loss < 0 %}text-danger{% endif %}">
+                                        {% if trade.action == 'SELL' %}
+                                            {% if trade.profit_loss > 0 %}+{% endif %}${{ trade.profit_loss|safe_round(2) }}
+                                            ({% if trade.profit_loss_percent > 0 %}+{% endif %}{{ trade.profit_loss_percent|safe_round(2) }}%)
+                                        {% else %}
+                                            -
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        {% if trade.action == 'SELL' and trade.missed_opportunity_percent %}
+                                            <span class="text-danger">+{{ trade.missed_opportunity_percent|safe_round(2) }}%</span>
+                                            <small class="d-block text-muted">Best exit: {{ trade.max_price_date }}</small>
+                                        {% else %}
+                                            -
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                                {% if trades|length == 0 %}
+                                <tr>
+                                    <td colspan="8" class="text-center p-3">No trade history available.</td>
+                                </tr>
+                                {% endif %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Sell Stock Modal -->
+<div class="modal fade" id="sellModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Sell Stock</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form id="sell-form">
+                    <input type="hidden" id="sell-symbol" name="symbol">
+                    
+                    <div class="mb-3">
+                        <label class="form-label">Stock</label>
+                        <input type="text" class="form-control" id="sell-display-symbol" disabled>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label class="form-label">Current Price ($)</label>
+                        <input type="number" class="form-control" id="sell-price" name="price" step="0.01" required>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label class="form-label">Shares to Sell</label>
+                        <input type="number" class="form-control" id="sell-shares" name="shares" min="1" required>
+                        <div class="form-text">You own <span id="owned-shares">0</span> shares</div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label class="form-label">Notes</label>
+                        <textarea class="form-control" id="sell-notes" name="notes" rows="2"></textarea>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-danger" id="confirm-sell-btn">
+                    <i class="bi bi-check-circle"></i> Confirm Sell
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Set up sell button handlers
+    const sellButtons = document.querySelectorAll('.sell-btn');
+    const sellModal = new bootstrap.Modal(document.getElementById('sellModal'));
+    
+    sellButtons.forEach(button => {
+        button.addEventListener('click', function() {
+            const symbol = this.getAttribute('data-symbol');
+            const shares = this.getAttribute('data-shares');
+            
+            document.getElementById('sell-symbol').value = symbol;
+            document.getElementById('sell-display-symbol').value = symbol;
+            document.getElementById('owned-shares').textContent = shares;
+            document.getElementById('sell-shares').value = shares;
+            document.getElementById('sell-shares').max = shares;
+            
+            // Get current price (in production, fetch from an API)
+            // For now just use a placeholder
+            fetch(`/api/stock-data/${symbol}?limit=1`)
+                .then(response => response.json())
+                .then(data => {
+                    if (data.length > 0 && data[0].price) {
+                        document.getElementById('sell-price').value = data[0].price;
+                    } else {
+                        // Fallback price
+                        document.getElementById('sell-price').value = 100.00;
+                    }
+                })
+                .catch(error => {
+                    console.error('Error fetching price:', error);
+                    // Fallback price
+                    document.getElementById('sell-price').value = 100.00;
+                });
+            
+            sellModal.show();
+        });
+    });
+    
+    // Handle the sell confirmation
+    document.getElementById('confirm-sell-btn').addEventListener('click', function() {
+        const symbol = document.getElementById('sell-symbol').value;
+        const price = document.getElementById('sell-price').value;
+        const shares = document.getElementById('sell-shares').value;
+        const notes = document.getElementById('sell-notes').value;
+        
+        // Prepare the data for the API call
+        const data = {
+            symbol: symbol,
+            price: parseFloat(price),
+            shares: parseFloat(shares),
+            action: 'SELL',
+            date: new Date().toISOString().split('T')[0],
+            notes: notes,
+            investment: parseFloat(price) * parseFloat(shares),
+            stop_loss: 0,
+            take_profit: 0
+        };
+        
+        // Execute the trade
+        fetch('/execute-trade', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(data)
+        })
+        .then(response => response.json())
+        .then(result => {
+            if (result.status === 'success') {
+                // Close the modal
+                sellModal.hide();
+                
+                // Show success message
+                alert('Stock sold successfully!');
+                
+                // Reload the page to show updated portfolio
+                window.location.reload();
+            } else {
+                alert('Error: ' + result.message);
+            }
+        })
+        .catch(error => {
+            console.error('Error executing trade:', error);
+            alert('An error occurred while selling the stock.');
+        });
+    });
+});
+</script>
+{% endblock %} 

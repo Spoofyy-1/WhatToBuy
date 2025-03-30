@@ -1,0 +1,287 @@
+/* Global Styling */
+body {
+    background-color: #f8f9fa;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+.navbar {
+    background: linear-gradient(135deg, #4b6cb7 0%, #182848 100%);
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+}
+
+.navbar-brand {
+    font-weight: 600;
+}
+
+.footer {
+    background-color: #f8f9fa;
+    border-top: 1px solid rgba(0, 0, 0, 0.05);
+}
+
+/* Cards */
+.card {
+    border-radius: 10px;
+    border: none;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+    transition: transform 0.3s, box-shadow 0.3s;
+}
+
+.card:hover {
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+}
+
+.card-header {
+    background-color: #f8f9fa;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+    font-weight: 600;
+}
+
+.dashboard-card {
+    border-radius: 10px;
+    position: relative;
+    overflow: hidden;
+}
+
+.dashboard-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 5px;
+    background: linear-gradient(to right, #4b6cb7, #182848);
+}
+
+/* Tables */
+.table-success-light {
+    background-color: rgba(40, 167, 69, 0.05);
+}
+
+.table-danger-light {
+    background-color: rgba(220, 53, 69, 0.05);
+}
+
+.table th {
+    font-weight: 600;
+    text-transform: uppercase;
+    font-size: 0.8rem;
+    letter-spacing: 0.5px;
+}
+
+/* Position and analysis rows */
+.position-row {
+    cursor: pointer;
+    transition: background-color 0.2s;
+}
+
+.position-row:hover {
+    background-color: rgba(0, 0, 0, 0.02);
+}
+
+.position-details, .analysis-details {
+    background-color: #f8f9fc;
+}
+
+/* Badges */
+.badge {
+    font-weight: 500;
+    padding: 0.35em 0.65em;
+    border-radius: 0.25rem;
+}
+
+/* Recommendation badges */
+.badge-buy {
+    background-color: #28a745;
+    color: white;
+}
+
+.badge-sell {
+    background-color: #dc3545;
+    color: white;
+}
+
+.badge-hold {
+    background-color: #6c757d;
+    color: white;
+    border: 1px solid rgba(0,0,0,0.1);
+}
+
+/* Progress bars */
+.progress {
+    background-color: #e9ecef;
+    border-radius: 0.25rem;
+}
+
+/* Buttons */
+.btn {
+    border-radius: 0.25rem;
+    font-weight: 500;
+}
+
+.btn-primary {
+    background: linear-gradient(135deg, #4b6cb7 0%, #182848 100%);
+    border: none;
+}
+
+.btn-primary:hover {
+    background: linear-gradient(135deg, #3b5ca5 0%, #0c1d3c 100%);
+}
+
+/* Animated price changes */
+@keyframes pulse-green {
+    0% {
+        background-color: rgba(40, 167, 69, 0.2);
+    }
+    100% {
+        background-color: transparent;
+    }
+}
+
+@keyframes pulse-red {
+    0% {
+        background-color: rgba(220, 53, 69, 0.2);
+    }
+    100% {
+        background-color: transparent;
+    }
+}
+
+.price-change-up {
+    animation: pulse-green 2s ease-in-out;
+}
+
+.price-change-down {
+    animation: pulse-red 2s ease-in-out;
+}
+
+/* Chart container constraints */
+.chart-container {
+    position: relative;
+    height: 400px !important; /* Increased height for better visualization */
+    width: 100%;
+    overflow: hidden; /* Prevent any overflow */
+    margin-bottom: 20px;
+    border: 1px solid #eee;
+    border-radius: 5px;
+    padding: 10px;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+}
+
+/* For expanded detail charts - prevent them from growing too large */
+.analysis-details .chart-container {
+    height: 400px !important;
+    max-height: 500px;
+}
+
+/* Prevent growth in expanded details */
+.analysis-details td {
+    max-height: 1000px;
+    overflow: auto;
+}
+
+/* Fix for the expanded row content */
+.analysis-details .row {
+    margin-bottom: 15px;
+}
+
+/* Add styling for the technical indicators section */
+.technical-indicators-panel {
+    border-left: 1px solid #eee;
+    height: 100%;
+}
+
+/* Fix for the info button visibility */
+.btn-outline-info {
+    border-color: #17a2b8;
+    color: #17a2b8;
+}
+
+.btn-outline-info:hover {
+    background-color: #17a2b8;
+    color: white;
+}
+
+/* Ensure the buttons are properly spaced and visible */
+.action-buttons {
+    display: flex;
+    gap: 5px;
+}
+
+/* Style for the details section to make it more readable */
+.analysis-details {
+    background-color: #f8f9fa;
+    transition: all 0.3s ease-in-out;
+}
+
+.analysis-details.d-none {
+    display: none !important;
+}
+
+/* Fix for mobile view */
+@media (max-width: 768px) {
+    .analysis-details .col-md-6 {
+        margin-bottom: 15px;
+    }
+    
+    .chart-container {
+        height: 300px !important;
+    }
+}
+
+/* Style for the indicator badges */
+.indicator-badge {
+    display: inline-block;
+    padding: 4px 8px;
+    border-radius: 4px;
+    margin-right: 5px;
+    font-size: 0.8rem;
+    font-weight: 500;
+}
+
+.price-cell {
+    font-weight: bold;
+    position: relative;
+}
+
+.price-cell small {
+    font-size: 0.7rem;
+    opacity: 0.8;
+}
+
+/* Notification system (add to the end of your CSS file) */
+.notification {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    z-index: 1000;
+    min-width: 300px;
+    padding: 15px;
+    border-radius: 10px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    animation: fade-in 0.3s, fade-out 0.3s 4.7s;
+    opacity: 0.95;
+    background: linear-gradient(135deg, #4b6cb7 0%, #182848 100%);
+    color: white;
+}
+
+.notification.success {
+    background: linear-gradient(135deg, #28a745 0%, #145523 100%);
+}
+
+.notification.danger {
+    background: linear-gradient(135deg, #dc3545 0%, #7c151f 100%);
+}
+
+.notification.warning {
+    background: linear-gradient(135deg, #ffc107 0%, #d39e00 100%);
+}
+
+@keyframes fade-in {
+    from { opacity: 0; transform: translateY(-20px); }
+    to { opacity: 0.95; transform: translateY(0); }
+}
+
+@keyframes fade-out {
+    from { opacity: 0.95; transform: translateY(0); }
+    to { opacity: 0; transform: translateY(-20px); }
+} 

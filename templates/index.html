@@ -1,0 +1,235 @@
+{% extends 'layout.html' %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- Portfolio Overview Cards -->
+    <div class="row mb-4">
+        <div class="col-md-3">
+            <div class="card dashboard-card shadow-sm">
+                <div class="card-body">
+                    <h6 class="text-muted mb-1">Portfolio Value</h6>
+                    <h3 class="mb-0">${{ total_value|default(0)|round(2) }}</h3>
+                    <div class="d-flex align-items-center mt-2">
+                        <span class="badge {% if total_pl|default(0) >= 0 %}bg-success{% else %}bg-danger{% endif %} me-2">
+                            {% if total_pl|default(0) >= 0 %}+{% endif %}{{ total_pl_percent|default(0)|round(2) }}%
+                        </span>
+                        <span class="text-{% if total_pl|default(0) >= 0 %}success{% else %}danger{% endif %}">
+                            {% if total_pl|default(0) >= 0 %}+{% endif %}${{ total_pl|default(0)|round(2) }}
+                        </span>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card dashboard-card shadow-sm">
+                <div class="card-body">
+                    <h6 class="text-muted mb-1">Today's Change</h6>
+                    <h3 class="mb-0">+$245.75</h3>
+                    <div class="d-flex align-items-center mt-2">
+                        <span class="badge bg-success me-2">+1.2%</span>
+                        <small>vs yesterday</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card dashboard-card shadow-sm">
+                <div class="card-body">
+                    <h6 class="text-muted mb-1">Win Rate</h6>
+                    <h3 class="mb-0">{{ win_rate|round(1) }}%</h3>
+                    <div class="d-flex align-items-center mt-2">
+                        <div class="progress flex-grow-1" style="height: 8px;">
+                            <div class="progress-bar bg-success" style="width: {{ win_rate }}%"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card dashboard-card shadow-sm">
+                <div class="card-body">
+                    <h6 class="text-muted mb-1">Open Positions</h6>
+                    <h3 class="mb-0">{{ portfolio|length }}</h3>
+                    <div class="d-flex align-items-center mt-2">
+                        <span class="badge bg-info me-2">Active</span>
+                        <small>{{ portfolio|length }} stocks</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Portfolio and Charts Section -->
+    <div class="row">
+        <!-- Positions List -->
+        <div class="col-md-8 mb-4">
+            <div class="card shadow">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">Your Positions</h5>
+                    <button id="new-analysis-btn" class="btn btn-sm btn-outline-primary">
+                        <i class="bi bi-plus"></i> New Analysis
+                    </button>
+                </div>
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                        <table class="table table-hover mb-0" id="positions-table">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>Symbol</th>
+                                    <th>Shares</th>
+                                    <th>Avg Price</th>
+                                    <th>Current</th>
+                                    <th>P/L</th>
+                                    <th>% Change</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="positions-table-body">
+                                {% for position in portfolio %}
+                                <tr class="position-row" data-symbol="{{ position.symbol }}">
+                                    <td class="fw-bold">{{ position.symbol }}</td>
+                                    <td>{{ position.shares }}</td>
+                                    <td>${{ position.avg_price|default(0)|round(2) }}</td>
+                                    <td>${{ position.current_price|default(0)|round(2) }}</td>
+                                    <td class="{% if position.profit_loss|default(0) >= 0 %}text-success{% else %}text-danger{% endif %}">
+                                        {% if position.profit_loss|default(0) >= 0 %}+{% endif %}${{ position.profit_loss|default(0)|round(2) }}
+                                    </td>
+                                    <td>
+                                        <span class="badge {% if position.percent_change|default(0) >= 0 %}bg-success{% else %}bg-danger{% endif %}">
+                                            {% if position.percent_change|default(0) >= 0 %}+{% endif %}{{ position.percent_change|default(0)|round(2) }}%
+                                        </span>
+                                    </td>
+                                    <td>
+                                        <button class="btn btn-sm btn-outline-secondary details-toggle" data-target="details-{{ position.symbol }}">
+                                            <i class="bi bi-chevron-down"></i>
+                                        </button>
+                                    </td>
+                                </tr>
+                                <tr id="details-{{ position.symbol }}" class="position-details d-none">
+                                    <td colspan="7" class="p-0">
+                                        <div class="p-3">
+                                            <div class="row">
+                                                <div class="col-md-8">
+                                                    <canvas id="chart-{{ position.symbol }}" height="250"></canvas>
+                                                </div>
+                                                <div class="col-md-4">
+                                                    <h6>Position Details</h6>
+                                                    <table class="table table-sm">
+                                                        <tr>
+                                                            <td>Market Value:</td>
+                                                            <td class="text-end">${{ (position.shares * position.current_price)|round(2) }}</td>
+                                                        </tr>
+                                                        <tr>
+                                                            <td>Cost Basis:</td>
+                                                            <td class="text-end">${{ (position.shares * position.avg_price)|round(2) }}</td>
+                                                        </tr>
+                                                        <tr class="{% if position.profit_loss|default(0) >= 0 %}table-success{% else %}table-danger{% endif %}">
+                                                            <td>Profit/Loss:</td>
+                                                            <td class="text-end fw-bold">{% if position.profit_loss|default(0) >= 0 %}+{% endif %}${{ position.profit_loss|default(0)|round(2) }}</td>
+                                                        </tr>
+                                                    </table>
+                                                    <div class="d-grid gap-2 mt-3">
+                                                        <button class="btn btn-success">Buy More</button>
+                                                        <button class="btn btn-danger">Sell Position</button>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Portfolio Charts -->
+        <div class="col-md-4 mb-4">
+            <div class="row">
+                <div class="col-12 mb-4">
+                    <div class="card shadow">
+                        <div class="card-header">
+                            <h5 class="mb-0">Portfolio Allocation</h5>
+                        </div>
+                        <div class="card-body">
+                            <canvas id="allocation-chart" height="250"></canvas>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-12">
+                    <div class="card shadow">
+                        <div class="card-header">
+                            <h5 class="mb-0">Market Overview</h5>
+                        </div>
+                        <div class="card-body">
+                            <canvas id="market-chart" height="200"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Recent Trades -->
+    <div class="row">
+        <div class="col-md-12 mb-4">
+            <div class="card shadow">
+                <div class="card-header">
+                    <h5 class="mb-0">Recent Trades</h5>
+                </div>
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                        <table class="table mb-0">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>Date</th>
+                                    <th>Symbol</th>
+                                    <th>Action</th>
+                                    <th>Shares</th>
+                                    <th>Price</th>
+                                    <th>Total</th>
+                                    <th>P/L</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for trade in recent_trades %}
+                                <tr>
+                                    <td>{{ trade.date }}</td>
+                                    <td class="fw-bold">{{ trade.symbol }}</td>
+                                    <td>
+                                        <span class="badge {% if trade.action == 'BUY' %}bg-success{% else %}bg-danger{% endif %}">
+                                            {{ trade.action }}
+                                        </span>
+                                    </td>
+                                    <td>{{ trade.shares }}</td>
+                                    <td>${{ trade.price|round(2) }}</td>
+                                    <td>${{ (trade.shares * trade.price)|round(2) }}</td>
+                                    <td class="{% if trade.profit_loss > 0 %}text-success{% elif trade.profit_loss < 0 %}text-danger{% endif %}">
+                                        {% if trade.profit_loss != 0 %}
+                                            {% if trade.profit_loss > 0 %}+{% endif %}${{ trade.profit_loss|round(2) }}
+                                        {% else %}
+                                            -
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="{{ url_for('static', filename='js/dashboard.js') }}"></script>
+<script>
+document.getElementById('new-analysis-btn').addEventListener('click', function() {
+    window.location.href = '/analyze';
+});
+</script>
+{% endblock %} 
