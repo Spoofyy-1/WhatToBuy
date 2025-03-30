@@ -4,7 +4,7 @@ from datetime import datetime, timedelta
 import time
 import os
 
-ALPHA_VANTAGE_API_KEY = 'C7QTPU86YRN5EVEY'
+ALPHA_VANTAGE_API_KEY = 'YOUR API KEY'
 
 def fetch_historical_data(symbol, start_date, end_date=None):
     """
